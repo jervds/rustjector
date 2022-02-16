@@ -1,12 +1,20 @@
 use crate::core::injector::{inject, Injector};
+use crate::core::scenario::Scenario;
+use crate::http::http_method::HttpMethod;
 
 mod core;
+mod http;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let scenario = Scenario {
+        method: HttpMethod::Get,
+        url: "https://www.google.com",
+    };
     let injector = Injector {
         metrics: vec![],
         vus: 5,
+        scenario,
     };
 
     let result = inject(injector).await?;

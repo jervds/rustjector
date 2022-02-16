@@ -1,10 +1,11 @@
 use std::time::Instant;
 
 use crate::core::metric::Metric;
+use crate::http::http_method::HttpMethod;
 
-pub async fn scenario(user_id: u32) -> anyhow::Result<Metric> {
+pub async fn scenario(user_id: u32, scenario: Scenario) -> anyhow::Result<Metric> {
     let start = Instant::now();
-    reqwest::get("https://www.google.com").await?.text().await?;
+    scenario.perform_query().await?;
     let duration = start.elapsed();
     println!(
         "OS Thread {:?} - for vu {} done in: {:?}",
@@ -14,4 +15,18 @@ pub async fn scenario(user_id: u32) -> anyhow::Result<Metric> {
     );
 
     Ok(Metric { duration, user_id })
+}
+
+#[derive(Clone)]
+pub struct Scenario {
+    pub(crate) method: HttpMethod,
+    pub(crate) url: &'static str,
+}
+
+impl Scenario {
+    async fn perform_query(&self) -> anyhow::Result<String> {
+        Ok(match &self.method {
+            HttpMethod::Get => reqwest::get(self.url).await?.text().await?,
+        })
+    }
 }
