@@ -5,13 +5,12 @@ use crate::core::metric::Metric;
 use crate::core::scenario::Scenario;
 
 pub struct Injector {
-    pub(crate) metrics: Vec<Option<Metric>>,
     pub(crate) vus: u32,
     pub(crate) scenario: Scenario,
 }
 
 impl Injector {
-    pub async fn inject(self) -> anyhow::Result<Injector> {
+    pub async fn inject(self) -> anyhow::Result<Vec<Option<Metric>>> {
         let mut futs = FuturesUnordered::new();
         let mut metrics = Vec::<Option<Metric>>::new();
 
@@ -27,6 +26,6 @@ impl Injector {
             metrics.push(Some(metric))
         }
 
-        Ok(Injector { metrics, ..self })
+        Ok(metrics)
     }
 }
