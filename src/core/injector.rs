@@ -2,7 +2,7 @@ use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
 use crate::core::metric::Metric;
-use crate::core::scenario::{scenario, Scenario};
+use crate::core::scenario::Scenario;
 
 pub struct Injector {
     pub(crate) metrics: Vec<Option<Metric>>,
@@ -10,14 +10,23 @@ pub struct Injector {
     pub(crate) scenario: Scenario,
 }
 
-pub async fn inject(mut injector: Injector) -> anyhow::Result<Injector> {
-    let mut futs = FuturesUnordered::new();
-    for user_id in 1..=injector.vus {
-        futs.push(tokio::spawn(scenario(user_id, injector.scenario.clone())));
+impl Injector {
+    pub async fn inject(self) -> anyhow::Result<Injector> {
+        let mut futs = FuturesUnordered::new();
+        let mut metrics = Vec::<Option<Metric>>::new();
+
+        for user_id in 1..=self.vus {
+            futs.push(tokio::spawn(Scenario::execute(
+                self.scenario.clone(),
+                user_id,
+            )));
+        }
+
+        while let Some(handled) = futs.next().await {
+            let metric = handled??;
+            metrics.push(Some(metric))
+        }
+
+        Ok(Injector { metrics, ..self })
     }
-    while let Some(handled) = futs.next().await {
-        let metric = handled??;
-        injector.metrics.push(Some(metric))
-    }
-    Ok(injector)
 }
