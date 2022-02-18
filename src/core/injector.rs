@@ -1,31 +1,35 @@
 use futures::stream::FuturesUnordered;
-use futures::StreamExt;
+use futures::{StreamExt, TryStreamExt};
+use tokio::task::JoinHandle;
 
 use crate::core::metric::Metric;
 use crate::core::scenario::Scenario;
 
 pub struct Injector {
-    pub(crate) vus: u32,
+    pub(crate) vus: usize,
     pub(crate) scenario: Scenario,
 }
 
 impl Injector {
-    pub async fn inject(self) -> anyhow::Result<Vec<Option<Metric>>> {
-        let mut futs = FuturesUnordered::new();
-        let mut metrics = Vec::<Option<Metric>>::new();
+    pub async fn inject(self) -> Vec<Option<Metric>> {
+        let metrics = self
+            .spawn_scenarios()
+            .await
+            .into_stream()
+            .map(Metric::from_scenario_execution)
+            .collect();
 
-        for user_id in 1..=self.vus {
-            futs.push(tokio::spawn(Scenario::execute(
-                self.scenario.clone(),
-                user_id,
-            )));
-        }
+        metrics.await
+    }
 
-        while let Some(handled) = futs.next().await {
-            let metric = handled??;
-            metrics.push(Some(metric))
-        }
+    async fn spawn_scenarios(&self) -> FuturesUnordered<JoinHandle<anyhow::Result<Metric>>> {
+        let futures = FuturesUnordered::new();
 
-        Ok(metrics)
+        (1..=self.vus)
+            .map(|it| {
+                futures.push(tokio::spawn(Scenario::execute(self.scenario.clone(), it)));
+            })
+            .for_each(drop);
+        futures
     }
 }

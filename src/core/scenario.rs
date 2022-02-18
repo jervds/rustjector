@@ -18,7 +18,7 @@ impl Scenario {
         })
     }
 
-    pub async fn execute(scenario: Scenario, user_id: u32) -> anyhow::Result<Metric> {
+    pub async fn execute(scenario: Scenario, user_id: usize) -> anyhow::Result<Metric> {
         let start = Instant::now();
         scenario.perform_query().await?;
         let duration = start.elapsed();

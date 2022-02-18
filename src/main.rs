@@ -17,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
 
     injector
         .inject()
-        .await?
+        .await //TODO migrate to stream
         .into_iter()
         .map(|it| match it {
             None => {
