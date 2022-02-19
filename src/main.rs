@@ -13,7 +13,7 @@ async fn main() -> anyhow::Result<()> {
         method: HttpMethod::Get,
         url: "https://www.google.com",
     };
-    let injector = Injector { vus: 5, scenario };
+    let injector = Injector::new(5, scenario);
 
     injector
         .inject()

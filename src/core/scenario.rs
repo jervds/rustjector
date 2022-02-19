@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::time::Instant;
 
 use log::info;
@@ -18,7 +19,7 @@ impl Scenario {
         })
     }
 
-    pub async fn execute(scenario: Scenario, user_id: usize) -> anyhow::Result<Metric> {
+    pub async fn execute(scenario: Arc<Scenario>, user_id: usize) -> anyhow::Result<Metric> {
         let start = Instant::now();
         scenario.perform_query().await?;
         let duration = start.elapsed();
@@ -36,12 +37,12 @@ impl Scenario {
 mod tests {
     use super::*;
 
-    fn a_simple_get_scenario() -> Scenario {
-        Scenario {
+    fn a_simple_get_scenario() -> Arc<Scenario> {
+        Arc::new(Scenario {
             method: HttpMethod::Get,
             //TODO mock me!
             url: "https://www.google.com",
-        }
+        })
     }
 
     #[tokio::test]
