@@ -19,7 +19,7 @@ impl Injector {
         }
     }
 
-    pub async fn inject(self) -> Vec<Option<Metric>> {
+    pub async fn inject(&self) -> Vec<Option<Metric>> {
         let metrics = self
             .spawn_scenarios()
             .await
