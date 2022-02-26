@@ -1,3 +1,3 @@
 pub mod injector;
-mod metric;
+pub mod metric;
 pub mod scenario;

@@ -1,4 +1,5 @@
 use crate::core::injector::Injector;
+use crate::core::metric::Metric;
 use crate::core::scenario::Scenario;
 use crate::http::http_method::HttpMethod;
 
@@ -18,19 +19,8 @@ async fn main() -> anyhow::Result<()> {
         .inject()
         .await //TODO migrate to stream
         .into_iter()
-        .map(|it| match it {
-            None => {
-                println!("is none !")
-            }
-            Some(metric) => {
-                println!(
-                    "user_id: {}, Duration: {}",
-                    metric.user_id,
-                    metric.duration.as_millis()
-                )
-            }
-        })
-        .for_each(drop);
+        .map(Metric::try_to_string)
+        .for_each(|it| println!("{}", it));
 
     Ok(())
 }
